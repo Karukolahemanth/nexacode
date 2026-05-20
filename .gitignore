@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Environment files — NEVER commit real secrets
+.env
+.env.local
+backend/.env
+frontend/.env.local
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Docker
+docker-compose.override.yml
+
+# Python cache
+*.pyc
+__pycache__/
