@@ -132,7 +132,7 @@ function FloatingParticles() {
 
 /* ── Main Login Page ───────────────────────────────── */
 export default function LoginPage() {
-  const { login, loginAsDemo, isLoading, error, clearError } = useAuthStore();
+  const { login, loginAsDemo, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -142,6 +142,13 @@ export default function LoginPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Redirect to IDE if already logged in
+  useEffect(() => {
+    if (mounted && isAuthenticated) {
+      window.location.href = "/";
+    }
+  }, [mounted, isAuthenticated]);
 
   const validate = () => {
     const errs: { username?: string; password?: string } = {};
@@ -157,20 +164,18 @@ export default function LoginPage() {
     clearError();
     if (!validate()) return;
     await login(username, password);
-    // In demo mode the store will set isAuthenticated, and the main page or a redirect will handle it
-    if (typeof window !== "undefined") {
+    if (useAuthStore.getState().isAuthenticated) {
       window.location.href = "/";
     }
   };
 
-  const handleDemo = () => {
-    loginAsDemo();
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
-    }
+  const handleDemo = async () => {
+    await loginAsDemo();
+    window.location.href = "/";
   };
 
   if (!mounted) return null;
+
 
   return (
     <div
