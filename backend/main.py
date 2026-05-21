@@ -43,14 +43,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — use configured origins
+# CORS — "*" cannot be combined with allow_credentials=True
+_origins = settings.cors_origins_list
+_credentials = "*" not in _origins  # credentials only when origins are explicit
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
+    allow_origins=_origins,
+    allow_credentials=_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # REST API routes
 app.include_router(api_router, prefix="/api")

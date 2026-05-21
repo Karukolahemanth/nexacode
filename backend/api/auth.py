@@ -93,12 +93,19 @@ async def signup(req: SignupRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
-    """Authenticate and return tokens."""
-    result = await db.execute(select(User).where(User.username == req.username))
+    """Authenticate and return tokens. Accepts username OR email."""
+    from sqlalchemy import or_
+
+    # Allow login with username or email
+    result = await db.execute(
+        select(User).where(
+            or_(User.username == req.username, User.email == req.username)
+        )
+    )
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(req.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise HTTPException(status_code=401, detail="Invalid username/email or password")
 
     token_data = {"sub": user.id, "username": user.username, "role": user.role}
     access_token = create_access_token(token_data)
@@ -115,6 +122,7 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
             "createdAt": user.created_at.isoformat() if user.created_at else None,
         },
     )
+
 
 
 @router.post("/refresh")
