@@ -24,10 +24,14 @@ class User(Base):
 
 
 # Async engine — statement_cache_size=0 required for Supabase Transaction pooler
+# ssl=True required for Supabase (asyncpg doesn't support ?sslmode= in URL)
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
-    connect_args={"statement_cache_size": 0},
+    connect_args={
+        "statement_cache_size": 0,
+        "ssl": True,
+    },
     pool_pre_ping=True,
 )
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
