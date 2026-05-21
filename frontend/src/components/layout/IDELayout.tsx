@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from "react";
 import { useUIStore } from "@/stores/uiStore";
 import { useEditorStore } from "@/stores/editorStore";
+import { useAuthStore } from "@/stores/authStore";
 import Sidebar from "./Sidebar";
 import StatusBar from "./StatusBar";
 import RightPanel from "./RightPanel";
@@ -16,7 +17,6 @@ import AgentPanel from "@/components/agents/AgentPanel";
 import EditorTabs from "@/components/editor/EditorTabs";
 import CodeEditor from "@/components/editor/CodeEditor";
 import WelcomeTab from "@/components/editor/WelcomeTab";
-
 
 /* ── Resize Handle ────────────────────────────────── */
 function ResizeHandle({
@@ -60,19 +60,94 @@ function ResizeHandle({
       onMouseDown={onMouseDown}
       style={{
         ...(isHorizontal
-          ? { width: "4px", cursor: "col-resize", minWidth: "4px" }
-          : { height: "4px", cursor: "row-resize", minHeight: "4px" }),
+          ? { width: "1px", cursor: "col-resize", minWidth: "1px" }
+          : { height: "1px", cursor: "row-resize", minHeight: "1px" }),
         background: "var(--border-primary)",
         flexShrink: 0,
-        transition: "background 0.15s",
+        transition: "background 0.1s, width 0.1s, height 0.1s",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--accent-primary)";
+        const el = e.currentTarget;
+        if (isHorizontal) el.style.width = "3px";
+        else el.style.height = "3px";
+        el.style.background = "var(--accent-primary)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = "var(--border-primary)";
+        const el = e.currentTarget;
+        if (isHorizontal) el.style.width = "1px";
+        else el.style.height = "1px";
+        el.style.background = "var(--border-primary)";
       }}
     />
+  );
+}
+
+/* ── VS Code Menu Bar ─────────────────────────────── */
+const MENUS = ["File", "Edit", "Selection", "View", "Go", "Run", "Terminal", "Help"];
+
+function MenuBar() {
+  const [open, setOpen] = useState<string | null>(null);
+  const { toggleBottomPanel, toggleSidebar, toggleRightPanel } = useUIStore();
+
+  const handleMenu = (menu: string) => {
+    setOpen(open === menu ? null : menu);
+  };
+
+  return (
+    <div
+      className="vsc-menubar"
+      style={{ background: "#3c3c3c", borderBottom: "1px solid #252526" }}
+      onMouseLeave={() => setOpen(null)}
+    >
+      {MENUS.map((menu) => (
+        <button
+          key={menu}
+          className="vsc-menubar-item"
+          onClick={() => handleMenu(menu)}
+          style={{
+            background: open === menu ? "rgba(255,255,255,0.12)" : "transparent",
+            border: "none",
+            cursor: "default",
+            fontFamily: "var(--font-sans)",
+          }}
+        >
+          {menu}
+        </button>
+      ))}
+
+      {/* Window title center */}
+      <div className="vsc-menubar-title">
+        NexusCode — AI IDE
+      </div>
+
+      {/* Quick actions on right */}
+      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <button
+          className="vsc-menubar-item"
+          onClick={toggleSidebar}
+          title="Toggle Sidebar (Ctrl+B)"
+          style={{ border: "none", cursor: "default", fontFamily: "var(--font-sans)", fontSize: 11 }}
+        >
+          ◧
+        </button>
+        <button
+          className="vsc-menubar-item"
+          onClick={toggleBottomPanel}
+          title="Toggle Terminal (Ctrl+`)"
+          style={{ border: "none", cursor: "default", fontFamily: "var(--font-sans)", fontSize: 11 }}
+        >
+          ⬓
+        </button>
+        <button
+          className="vsc-menubar-item"
+          onClick={toggleRightPanel}
+          title="Toggle AI Chat"
+          style={{ border: "none", cursor: "default", fontFamily: "var(--font-sans)", fontSize: 11 }}
+        >
+          ◨
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -80,18 +155,12 @@ function ResizeHandle({
 function SidebarContent() {
   const { sidebarTab } = useUIStore();
   switch (sidebarTab) {
-    case "files":
-      return <FileExplorer />;
-    case "git":
-      return <GitPanel />;
-    case "search":
-      return <SearchPanel />;
-    case "agents":
-      return <AgentPanel />;
-    case "settings":
-      return <SettingsPanel />;
-    default:
-      return <FileExplorer />;
+    case "files":    return <FileExplorer />;
+    case "git":      return <GitPanel />;
+    case "search":   return <SearchPanel />;
+    case "agents":   return <AgentPanel />;
+    case "settings": return <SettingsPanel />;
+    default:         return <FileExplorer />;
   }
 }
 
@@ -107,52 +176,65 @@ export default function IDELayout() {
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
 
   const handleSidebarResize = useCallback(
-    (delta: number) => {
-      setSidebarWidth((prev) => Math.max(160, Math.min(500, prev + delta)));
-    },
+    (delta: number) => setSidebarWidth((prev) => Math.max(160, Math.min(500, prev + delta))),
     []
   );
 
   const handleRightResize = useCallback(
-    (delta: number) => {
-      setRightPanelWidth((prev) => Math.max(260, Math.min(600, prev - delta)));
-    },
+    (delta: number) => setRightPanelWidth((prev) => Math.max(260, Math.min(600, prev - delta))),
     []
   );
 
   const handleBottomResize = useCallback(
-    (delta: number) => {
-      setBottomPanelHeight((prev) => Math.max(80, Math.min(500, prev - delta)));
-    },
+    (delta: number) => setBottomPanelHeight((prev) => Math.max(80, Math.min(500, prev - delta))),
     []
   );
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden" style={{ background: "var(--bg-primary)" }}>
+    <div
+      className="flex flex-col h-screen w-screen overflow-hidden"
+      style={{ background: "var(--bg-primary)", fontFamily: "var(--font-sans)" }}
+    >
       {/* Command Palette (Ctrl+P) */}
       <CommandPalette />
 
-      {/* Main content area — no TitleBar, straight into IDE */}
+      {/* VS Code style menu bar */}
+      <MenuBar />
+
+      {/* Main content area */}
       <div ref={containerRef} className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
         {/* Activity bar (48px icon strip) */}
         <Sidebar />
 
-        {/* Sidebar content panel (file explorer, git, settings, etc.) */}
+        {/* Sidebar content panel */}
         {isSidebarOpen && (
           <>
-            <div style={{ width: sidebarWidth, minWidth: sidebarWidth, maxWidth: sidebarWidth }} className="overflow-hidden shrink-0">
+            <div
+              style={{
+                width: sidebarWidth,
+                minWidth: sidebarWidth,
+                maxWidth: sidebarWidth,
+                background: "var(--bg-secondary)",
+                borderRight: "1px solid var(--border-primary)",
+              }}
+              className="overflow-hidden shrink-0"
+            >
               <SidebarContent />
             </div>
             <ResizeHandle direction="horizontal" onResize={handleSidebarResize} />
           </>
         )}
 
-        {/* Center area: editor + bottom terminal */}
+        {/* Center: editor + terminal */}
         <div className="flex-1 flex flex-col overflow-hidden" style={{ minWidth: 0 }}>
           {/* Editor area */}
           <div className="flex-1 flex flex-col overflow-hidden" style={{ minHeight: 0 }}>
-            <EditorTabs />
-            <div className="flex-1 overflow-hidden" style={{ background: "var(--bg-secondary)" }}>
+            {/* Tab bar */}
+            <div style={{ background: "#2d2d30", borderBottom: "1px solid #252526" }}>
+              <EditorTabs />
+            </div>
+            {/* Editor */}
+            <div className="flex-1 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
               {hasActiveFile ? <CodeEditor /> : <WelcomeTab />}
             </div>
           </div>
@@ -161,7 +243,16 @@ export default function IDELayout() {
           {isBottomPanelOpen && (
             <>
               <ResizeHandle direction="vertical" onResize={handleBottomResize} />
-              <div style={{ height: bottomPanelHeight, minHeight: bottomPanelHeight, maxHeight: bottomPanelHeight }} className="overflow-hidden shrink-0">
+              <div
+                style={{
+                  height: bottomPanelHeight,
+                  minHeight: bottomPanelHeight,
+                  maxHeight: bottomPanelHeight,
+                  background: "var(--bg-primary)",
+                  borderTop: "1px solid var(--border-primary)",
+                }}
+                className="overflow-hidden shrink-0"
+              >
                 <BottomPanel />
               </div>
             </>
@@ -172,14 +263,23 @@ export default function IDELayout() {
         {isRightPanelOpen && (
           <>
             <ResizeHandle direction="horizontal" onResize={handleRightResize} />
-            <div style={{ width: rightPanelWidth, minWidth: rightPanelWidth, maxWidth: rightPanelWidth }} className="overflow-hidden shrink-0">
+            <div
+              style={{
+                width: rightPanelWidth,
+                minWidth: rightPanelWidth,
+                maxWidth: rightPanelWidth,
+                background: "var(--bg-secondary)",
+                borderLeft: "1px solid var(--border-primary)",
+              }}
+              className="overflow-hidden shrink-0"
+            >
               <RightPanel />
             </div>
           </>
         )}
       </div>
 
-      {/* Status bar */}
+      {/* VS Code blue status bar */}
       <StatusBar />
     </div>
   );

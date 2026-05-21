@@ -23,11 +23,11 @@ export default function StatusBar() {
 
   return (
     <div
-      className="flex items-center justify-between px-3 select-none"
+      className="flex items-center justify-between px-2 select-none"
       style={{
-        height: "24px",
-        minHeight: "24px",
-        background: "var(--accent-primary)",
+        height: "22px",
+        minHeight: "22px",
+        background: "#007acc",
         color: "white",
         fontSize: "12px",
       }}
