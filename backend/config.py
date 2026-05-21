@@ -44,9 +44,19 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
+    def __init__(self, **values):
+        super().__init__(**values)
+        # Automatically strip trailing/leading whitespace, carriage returns, and newlines from all string configurations
+        for key in self.__annotations__.keys():
+            if hasattr(self, key):
+                val = getattr(self, key)
+                if isinstance(val, str):
+                    setattr(self, key, val.strip())
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+
 
 
 settings = Settings()
