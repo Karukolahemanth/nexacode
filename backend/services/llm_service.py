@@ -112,16 +112,17 @@ class LLMService:
         max_tokens: int = 4096,
         temperature: float = 0.7,
         rag_context: Optional[List[dict]] = None,
+        model: Optional[str] = None,
     ) -> AsyncGenerator[str, None]:
         """Stream tokens from the LLM, optionally with RAG context."""
         system = build_rag_prompt(SYSTEM_PROMPT, rag_context) if rag_context else SYSTEM_PROMPT
 
         if self.provider == "ollama" and self.ollama_url:
-            async for token in self._stream_ollama(messages, system, max_tokens, temperature):
+            async for token in self._stream_ollama(messages, system, max_tokens, temperature, model):
                 yield token
         else:
             # Default: vLLM (OpenAI-compatible)
-            async for token in self._stream_vllm(messages, system, max_tokens, temperature):
+            async for token in self._stream_vllm(messages, system, max_tokens, temperature, model):
                 yield token
 
     async def generate(
@@ -130,17 +131,18 @@ class LLMService:
         max_tokens: int = 4096,
         temperature: float = 0.7,
         rag_context: Optional[List[dict]] = None,
+        model: Optional[str] = None,
     ) -> str:
         """Generate a complete response."""
         result = ""
-        async for token in self.stream_generate(messages, max_tokens, temperature, rag_context):
+        async for token in self.stream_generate(messages, max_tokens, temperature, rag_context, model):
             result += token
         return result
 
     # ── vLLM Backend (OpenAI-compatible) ─────────────
 
     async def _stream_vllm(
-        self, messages: List[Dict], system: str, max_tokens: int, temperature: float
+        self, messages: List[Dict], system: str, max_tokens: int, temperature: float, model: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         async with httpx.AsyncClient(timeout=120.0) as client:
             try:
@@ -148,7 +150,7 @@ class LLMService:
                     "POST",
                     f"{self.vllm_url}/chat/completions",
                     json={
-                        "model": self.model,
+                        "model": model or self.model,
                         "messages": [{"role": "system", "content": system}] + messages,
                         "max_tokens": max_tokens,
                         "temperature": temperature,
@@ -182,7 +184,7 @@ class LLMService:
     # ── Ollama Backend ───────────────────────────────
 
     async def _stream_ollama(
-        self, messages: List[Dict], system: str, max_tokens: int, temperature: float
+        self, messages: List[Dict], system: str, max_tokens: int, temperature: float, model: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         ollama_messages = [{"role": "system", "content": system}] + messages
         async with httpx.AsyncClient(timeout=120.0) as client:
@@ -191,7 +193,7 @@ class LLMService:
                     "POST",
                     f"{self.ollama_url}/api/chat",
                     json={
-                        "model": self.model,
+                        "model": model or self.model,
                         "messages": ollama_messages,
                         "stream": True,
                         "options": {

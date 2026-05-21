@@ -11,9 +11,12 @@ class Settings(BaseSettings):
     # Redis (optional — leave empty to disable)
     REDIS_URL: str = ""
 
+    # Workspace — directory where user files are stored on disk
+    WORKSPACE_DIR: str = ""  # defaults to ./workspace relative to backend CWD
+
     # LLM — vLLM (OpenAI-compatible endpoint)
     VLLM_URL: str = "http://localhost:8000/v1"
-    VLLM_MODEL: str = "Qwen/Qwen3-35B-A3B"
+    VLLM_MODEL: str = "llama-3.3-70b-versatile"
     VLLM_API_KEY: str = ""
 
     # LLM — Ollama (optional)
@@ -38,6 +41,13 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> List[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def workspace_path(self) -> str:
+        import os
+        path = self.WORKSPACE_DIR if self.WORKSPACE_DIR else os.path.join(os.getcwd(), "workspace")
+        os.makedirs(path, exist_ok=True)
+        return os.path.abspath(path)
 
     # App
     APP_NAME: str = "NexusIDE"

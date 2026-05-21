@@ -8,6 +8,7 @@ import logging
 from config import settings
 from api.router import api_router
 from websocket.chat_ws import router as chat_ws_router
+from websocket.terminal_ws import router as terminal_ws_router
 from auth.models import init_db
 
 logging.basicConfig(
@@ -31,6 +32,8 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Database tables initialized")
     except Exception as e:
         logger.error(f"❌ Database init failed: {e}")
+
+    logger.info(f"📁 Workspace: {settings.workspace_path}")
 
     yield
     logger.info(f"👋 Shutting down {settings.APP_NAME}")
@@ -60,6 +63,7 @@ app.include_router(api_router, prefix="/api")
 
 # WebSocket routes
 app.include_router(chat_ws_router)
+app.include_router(terminal_ws_router)
 
 
 @app.get("/")

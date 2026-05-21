@@ -57,9 +57,9 @@ class PTYManager:
     def __init__(self):
         self._sessions: Dict[str, PTYSession] = {}
 
-    async def create_session(self, session_id: str, workspace_id: str) -> PTYSession:
+    async def create_session(self, session_id: str, workspace_id: str, command: str = "/bin/bash") -> PTYSession:
         session = PTYSession(session_id, workspace_id)
-        await session.start()
+        await session.start(command)
         self._sessions[session_id] = session
         return session
 

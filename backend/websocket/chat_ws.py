@@ -44,6 +44,7 @@ async def chat_websocket(websocket: WebSocket, session_id: str):
             if message.get("type") == "chat_message":
                 user_content = message.get("content", "")
                 rag_enabled = message.get("ragEnabled", True)
+                model_override = message.get("model")
                 if not user_content.strip():
                     continue
 
@@ -108,6 +109,7 @@ async def chat_websocket(websocket: WebSocket, session_id: str):
                     async for token in llm_service.stream_generate(
                         messages,
                         rag_context=rag_context if rag_context else None,
+                        model=model_override,
                     ):
                         full_response += token
                         await ws_manager.send_json(websocket, {

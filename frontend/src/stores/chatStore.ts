@@ -66,7 +66,7 @@ const WELCOME_MSG: ChatMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Welcome to **NexusIDE**! I'm your AI coding assistant powered by **Qwen3-35B**.\n\nI can help you:\n- ✨ **Write** code and components\n- 🐛 **Debug** errors\n- 🔄 **Refactor** code\n- 📖 **Explain** patterns\n\nType a message below to get started.",
+    "Welcome to **NexusCode**! I'm your AI coding assistant powered by **Llama 3.3 70B** via Groq.\n\nI can help you:\n- ✨ **Write** code and components\n- 🐛 **Debug** errors\n- 🔄 **Refactor** code\n- 📖 **Explain** patterns\n\nType a message below to get started.",
   timestamp: Date.now(),
 };
 
@@ -92,7 +92,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isConnected: false,
   backendMode: "rest",
   thinkingPhase: "idle",
-  selectedModel: "Qwen/Qwen3-35B-A3B",
+  selectedModel: "llama-3.3-70b-versatile",
 
   get messages() {
     const state = get();

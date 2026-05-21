@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useEditorStore } from "@/stores/editorStore";
 import { nexusDarkTheme } from "@/lib/themes";
@@ -11,12 +11,23 @@ const MonacoEditor = dynamic(
 );
 
 export default function CodeEditor() {
-  const { tabs, activeTabId, updateContent } = useEditorStore();
+  const { tabs, activeTabId, updateContent, saveFile, isSaving } = useEditorStore();
   const activeTab = tabs.find((t) => t.id === activeTabId);
+
+  // Ctrl+S / Cmd+S to save
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        saveFile();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [saveFile]);
 
   const handleEditorDidMount = useCallback(
     (editor: unknown, monaco: { editor: { defineTheme: (name: string, theme: unknown) => void; setTheme: (name: string) => void } }) => {
-      // Register custom theme
       monaco.editor.defineTheme("nexus-dark", nexusDarkTheme as unknown as Parameters<typeof monaco.editor.defineTheme>[1]);
       monaco.editor.setTheme("nexus-dark");
     },
@@ -35,7 +46,18 @@ export default function CodeEditor() {
   if (!activeTab) return null;
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full relative">
+      {isSaving && (
+        <div
+          style={{
+            position: "absolute", top: 8, right: 16, zIndex: 10,
+            fontSize: 11, color: "#6ee7b7", opacity: 0.8,
+            background: "rgba(10,14,26,0.8)", padding: "2px 8px", borderRadius: 4,
+          }}
+        >
+          Saving...
+        </div>
+      )}
       <MonacoEditor
         key={activeTab.id}
         height="100%"
@@ -50,22 +72,12 @@ export default function CodeEditor() {
           fontLigatures: true,
           lineHeight: 22,
           padding: { top: 12, bottom: 12 },
-          minimap: {
-            enabled: true,
-            scale: 1,
-            showSlider: "mouseover",
-          },
-          scrollbar: {
-            verticalScrollbarSize: 8,
-            horizontalScrollbarSize: 8,
-          },
+          minimap: { enabled: true, scale: 1, showSlider: "mouseover" },
+          scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
           renderLineHighlight: "line",
           renderWhitespace: "selection",
           bracketPairColorization: { enabled: true },
-          guides: {
-            bracketPairs: true,
-            indentation: true,
-          },
+          guides: { bracketPairs: true, indentation: true },
           cursorBlinking: "smooth",
           cursorSmoothCaretAnimation: "on",
           smoothScrolling: true,
@@ -78,29 +90,14 @@ export default function CodeEditor() {
           acceptSuggestionOnCommitCharacter: true,
           snippetSuggestions: "inline",
           suggest: {
-            preview: true,
-            showMethods: true,
-            showFunctions: true,
-            showConstructors: true,
-            showFields: true,
-            showVariables: true,
-            showClasses: true,
-            showStructs: true,
-            showInterfaces: true,
-            showModules: true,
-            showProperties: true,
-            showEvents: true,
-            showOperators: true,
-            showUnits: true,
-            showValues: true,
-            showConstants: true,
-            showEnums: true,
-            showEnumMembers: true,
-            showKeywords: true,
-            showWords: true,
-            showColors: true,
-            showFiles: true,
-            showReferences: true,
+            preview: true, showMethods: true, showFunctions: true,
+            showConstructors: true, showFields: true, showVariables: true,
+            showClasses: true, showStructs: true, showInterfaces: true,
+            showModules: true, showProperties: true, showEvents: true,
+            showOperators: true, showUnits: true, showValues: true,
+            showConstants: true, showEnums: true, showEnumMembers: true,
+            showKeywords: true, showWords: true, showColors: true,
+            showFiles: true, showReferences: true,
           },
         }}
       />
