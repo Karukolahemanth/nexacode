@@ -118,23 +118,22 @@ export default function SettingsPanel() {
       <div className="flex-1 overflow-y-auto p-3">
         {/* LLM Settings */}
         <SettingGroup title="LLM Backend" icon={<Server size={13} />}>
-          <SettingRow label="Provider" description="Auto-detects vLLM or Ollama">
+          <SettingRow label="Provider" description="Auto-detects vLLM or Groq">
             <SelectInput
               value={settings.llmProvider}
-              onChange={(v) => settings.setLlmProvider(v as "auto" | "vllm" | "ollama" | "demo")}
+              onChange={(v) => settings.setLlmProvider(v as "auto" | "vllm" | "ollama")}
               options={[
                 { value: "auto", label: "Auto Detect" },
-                { value: "ollama", label: "Ollama" },
-                { value: "vllm", label: "vLLM" },
-                { value: "demo", label: "Demo Mode" },
+                { value: "vllm", label: "vLLM / Groq" },
+                { value: "ollama", label: "Ollama (local)" },
               ]}
             />
           </SettingRow>
           <SettingRow label="Endpoint URL" description="LLM server address">
-            <TextInput value={settings.llmEndpoint} onChange={settings.setLlmEndpoint} placeholder="http://localhost:11434" />
+            <TextInput value={settings.llmEndpoint} onChange={settings.setLlmEndpoint} placeholder="https://api.groq.com/openai/v1" />
           </SettingRow>
           <SettingRow label="Model" description="Model name or ID">
-            <TextInput value={settings.llmModel} onChange={settings.setLlmModel} placeholder="qwen2.5-coder:7b" />
+            <TextInput value={settings.llmModel} onChange={settings.setLlmModel} placeholder="qwen-qwq-32b" />
           </SettingRow>
           <SettingRow label="API Key" description="Optional, for vLLM">
             <TextInput value={settings.llmApiKey} onChange={settings.setLlmApiKey} placeholder="sk-..." type="password" />

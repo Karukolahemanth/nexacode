@@ -5,7 +5,7 @@ interface SettingsState {
   llmEndpoint: string;
   llmModel: string;
   llmApiKey: string;
-  llmProvider: "auto" | "vllm" | "ollama" | "demo";
+  llmProvider: "auto" | "vllm" | "ollama";
 
   // Editor
   fontSize: number;
@@ -21,7 +21,7 @@ interface SettingsState {
   setLlmEndpoint: (url: string) => void;
   setLlmModel: (model: string) => void;
   setLlmApiKey: (key: string) => void;
-  setLlmProvider: (provider: "auto" | "vllm" | "ollama" | "demo") => void;
+  setLlmProvider: (provider: "auto" | "vllm" | "ollama") => void;
   setFontSize: (size: number) => void;
   setTabSize: (size: number) => void;
   setWordWrap: (wrap: boolean) => void;
@@ -49,8 +49,8 @@ function saveToStorage(key: string, value: unknown) {
 }
 
 const DEFAULTS = {
-  llmEndpoint: "http://localhost:11434",
-  llmModel: "qwen2.5-coder:7b",
+  llmEndpoint: "https://api.groq.com/openai/v1",
+  llmModel: "qwen-qwq-32b",
   llmApiKey: "",
   llmProvider: "auto" as const,
   fontSize: 14,
