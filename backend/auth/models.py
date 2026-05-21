@@ -23,14 +23,19 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+# SSL context — disable cert verification for Supabase pooler on HF Spaces
+import ssl as _ssl
+_ssl_ctx = _ssl.create_default_context()
+_ssl_ctx.check_hostname = False
+_ssl_ctx.verify_mode = _ssl.CERT_NONE
+
 # Async engine — statement_cache_size=0 required for Supabase Transaction pooler
-# ssl=True required for Supabase (asyncpg doesn't support ?sslmode= in URL)
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     connect_args={
         "statement_cache_size": 0,
-        "ssl": True,
+        "ssl": _ssl_ctx,
     },
     pool_pre_ping=True,
 )
